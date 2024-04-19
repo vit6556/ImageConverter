@@ -8,5 +8,5 @@ app.include_router(images_router)
 templates = Jinja2Templates(directory="api/templates")
 
 @app.get("/")
-def read_root(request: Request):
+def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
