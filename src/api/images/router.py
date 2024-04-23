@@ -1,19 +1,13 @@
-from fastapi import Form, HTTPException, File, UploadFile, APIRouter
 from typing import Any
+from fastapi import Form, HTTPException, File, UploadFile, APIRouter
+
+from api.images.config import mime_type_mapping
 
 
 images_router = APIRouter(prefix="/images", tags=["Images"])
 
 @images_router.post("/convert")
 async def convert_image(file: UploadFile = File(Any), source_format: str = Form(Any), target_format: str = Form(Any)):
-    # Соответствие MIME-типов и расширений файлов
-    mime_type_mapping = {
-        "jpg": "image/jpeg",
-        "png": "image/png",
-        "gif": "image/gif",
-        "bmp": "image/bmp"
-    }
-
     # Проверка MIME-типа файла
     if file.content_type not in mime_type_mapping.values():
         raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.content_type}")
