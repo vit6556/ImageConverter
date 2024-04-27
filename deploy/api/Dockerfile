@@ -12,5 +12,6 @@ RUN pip install --no-cache-dir --upgrade -r api/requirements.txt
 
 COPY src/entrypoint.sh .
 COPY src/api api/
+COPY src/common common/
 
 ENTRYPOINT ["/app/entrypoint.sh"]
