@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import Form, HTTPException, File, UploadFile, APIRouter, Response
 from sqlalchemy.orm.exc import NoResultFound
 
-from common.database.session import DatabaseSessionManager
+from common.database.session import DatabaseSessionManager, redis_client
 from api.images.config import mime_type_mapping
 from common.models.image import Image
 
@@ -41,9 +41,13 @@ async def convert_image(file: UploadFile = File(Any), source_format: str = Form(
     hash_sha256.update(file_content)
     file_hash = hash_sha256.hexdigest()
 
+    # Добавление изображения в бд
     new_image = Image(filename=file.filename, content_type=file.content_type, data=file_content, converted=False, hash=file_hash)
     with DatabaseSessionManager() as session:
         session.add(new_image)
         session.commit()
 
-    return {"message": f"Received file {file.filename} with hash {file_hash } and content type {file.content_type}. Converting from {source_format} to {target_format}"}
+    # Добавление изображения в список задач
+    redis_client.lpush('image_tasks', file_hash)
+
+    return {"message": f"Received file '{file.filename}' with hash '{file_hash}' and content type '{file.content_type}'. Converting from '{source_format}' to '{target_format}'"}
