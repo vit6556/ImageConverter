@@ -74,6 +74,32 @@ services:
       - redis
       - postgres
 
+  prometheus:
+    image: prom/prometheus
+    container_name: image_converter_prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: image_converter_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: image_converter_node-exporter
+    restart: always
+
 volumes:
   postgres_data:
   redis_data:
+  prometheus-data:
+  grafana-data:
