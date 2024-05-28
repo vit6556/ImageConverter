@@ -1,5 +1,8 @@
 import io
+import time
 from PIL import Image
+
+from converter.config import FAKE_SLEEP_TIME
 
 
 def convert_image(input_image_bytes: bytes, output_format: str):
@@ -17,5 +20,7 @@ def convert_image(input_image_bytes: bytes, output_format: str):
 
     img_byte_arr = io.BytesIO()
     output_image.save(img_byte_arr, format=output_format.upper())
+
+    time.sleep(FAKE_SLEEP_TIME)
 
     return img_byte_arr.getvalue()

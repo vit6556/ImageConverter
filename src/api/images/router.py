@@ -4,10 +4,11 @@ from typing import Any
 from fastapi import Form, HTTPException, File, UploadFile, APIRouter, Response
 from sqlalchemy.orm.exc import NoResultFound
 
-from common.database.session import DatabaseSessionManager, redis_client
 from api.images.config import mime_type_mapping
 from api.images.schema import ImageFormat
 from common.models.image import Image
+from common.database.session import DatabaseSessionManager, redis_client
+from api.images.utils import get_cache, set_cache
 
 
 images_router = APIRouter(prefix="/images", tags=["Images"])
@@ -17,22 +18,31 @@ async def get_image(file_hash: str):
     with DatabaseSessionManager() as session:
         try:
             # Извлекаем изображение из базы данных по ID
-            image = session.query(Image).filter(Image.hash == file_hash).filter(Image.converted == False).one()
+            image = session.query(Image).filter(Image.hash == file_hash).filter(Image.converted == True).one()
         except NoResultFound:
             raise HTTPException(status_code=404, detail="Image not found")
 
     return Response(content=image.data, media_type=mime_type_mapping[image.source_content_type])
 
-@images_router.get("/converted/{file_hash}")
-async def get_converted_image(file_hash: str):
-    with DatabaseSessionManager() as session:
-        try:
-            # Извлекаем изображение из базы данных по ID
-            image = session.query(Image).filter(Image.hash == file_hash).filter(Image.converted == True).one()
-        except NoResultFound:
-            raise HTTPException(status_code=404, detail="Image not found")
+@images_router.get("/status/{file_hash}")
+async def get_convertion_status(file_hash: str):
+    cache_key = f"item-{file_hash}"
+    response = get_cache(cache_key)
+    if response:
+        response["from_cache"] = True
+    else:
+        with DatabaseSessionManager() as session:
+            try:
+                # Извлекаем изображение из базы данных по ID
+                image = session.query(Image).filter(Image.hash == file_hash).filter(Image.converted == True).one()
+                response = {"status": "Image converted", "download_url": images_router.url_path_for("get_image", file_hash=image.hash)}
+            except NoResultFound:
+                response = {"status": "Image not converted"}
 
-    return Response(content=image.data, media_type=mime_type_mapping[image.target_content_type])
+        set_cache(cache_key, response)
+        response["from_cache"] = False
+
+    return response
 
 @images_router.post("/convert")
 async def convert_image(file: UploadFile = File(Any), source_format: ImageFormat = Form(Any), target_format: ImageFormat = Form(Any)):

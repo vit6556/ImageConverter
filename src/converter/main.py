@@ -17,7 +17,8 @@ def main():
             session.add(converted_image)
             session.commit()
 
-        time.sleep(0.1)
+        cache_key = f"item-{image_hash}"
+        redis_client.delete(cache_key)
 
 if __name__ == '__main__':
     main()
