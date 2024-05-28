@@ -9,6 +9,7 @@ class Image(Base):
     id = Column(Integer, primary_key=True, index=True)
     hash = Column(String, index=True)
     filename = Column(String)
-    content_type = Column(String)
+    source_content_type = Column(String)
+    target_content_type = Column(String)
     data = Column(LargeBinary)
     converted = Column(Boolean)

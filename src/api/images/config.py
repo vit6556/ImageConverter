@@ -1,6 +1,6 @@
 mime_type_mapping = {
-    "jpg": "image/jpeg",
+    "jpg": "image/jpg",
+    "jpeg": "image/jpeg",
     "png": "image/png",
-    "gif": "image/gif",
     "bmp": "image/bmp"
 }
